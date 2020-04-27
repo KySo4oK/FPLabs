@@ -1,7 +1,12 @@
 import System.IO
+import Data.List
 
 main = do
-    handle <- openFile "f1.csv" ReadMode
+    line <- getLine
+    handle <- openFile (parseCommand line) ReadMode
     contents <- hGetContents handle
-    putStr contents
+    putStr ((unlines . lines) contents)
     hClose handle
+    main
+
+parseCommand = tail . dropWhile (/='(') . init
