@@ -1,5 +1,7 @@
-import Data.Char  
-  
+import System.IO
+
 main = do
-    line <- getLine
-    print $ line ++ "you wrote"
+    handle <- openFile "f1.csv" ReadMode
+    contents <- hGetContents handle
+    putStr contents
+    hClose handle
