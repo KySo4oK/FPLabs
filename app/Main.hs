@@ -9,4 +9,5 @@ main = do
     hClose handle
     main
 
-parseCommand = tail . dropWhile (/='(') . init
+parseCommand = tail . dropWhile (/='(') . init 
+
