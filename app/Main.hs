@@ -1,6 +1,7 @@
 import System.IO
 import Data.List
 import Data.List.Split
+import Data.Char
 
 main = do
     line <- getLine
@@ -25,14 +26,31 @@ getContentWithoutWhere (line, fileLines, sep)
 
 filterFileLinesUsingWhere (condition, fileLines, sep) =
           if isSubsequenceOf "=" condition
-          then let lc = splitOn "=" condition in eqFilter ((read (head lc)),(last lc),fileLines,sep)
-          else let lc = splitOn ">" condition in mtFilter ((read (head lc)),(last lc),fileLines,sep)
+          then let lc = splitOn "=" condition in eqFilter (head lc,last lc,fileLines,sep)
+          else let lc = splitOn ">" condition in mtFilter (head lc,last lc,fileLines,sep)
 
-eqFilter (column,value,fileLines,sep) = let indexOfCond = findIndexOfListElem column (head fileLines)
-          in filter (\line ->  read (getElementByIndex (splitOn sep line) indexOfCond) == read value) fileLines
+eqFilter (column,value,fileLines,sep) = let indexOfCond = findIndexOfListElem (column,(head fileLines))
+          in filter (\line ->  checkEq (getElementByIndex (splitOn sep line) indexOfCond) value ) fileLines
 
-mtFilter (column,value,fileLines,sep) = let indexOfCond = findIndexOfListElem column (head fileLines)
-          in filter (\line -> read (getElementByIndex (splitOn sep line) indexOfCond) > read value) fileLines
+checkEq a b = if isNumber' a
+              then (read a + 0.0) == (read b + 0.0)
+              else a==b
+
+mtFilter (column,value,fileLines,sep) = let indexOfCond = findIndexOfListElem (column,(head fileLines))
+          in filter (\line -> checkMt (getElementByIndex (splitOn sep line) indexOfCond) value ) fileLines
+
+checkMt a b = if isNumber' a
+              then (read a + 0.0) > (read b + 0.0)
+              else a>b
+
+isNumber' :: String -> Bool
+isNumber' ""  = False
+isNumber' "." = False
+isNumber' xs  =
+  case dropWhile isDigit xs of
+    ""       -> True
+    ('.':ys) -> all isDigit ys
+    _        -> False
 
 useWhere (line, fileLines, sep) =
          getContentWithoutWhere (line,(filterFileLinesUsingWhere ((last (words line)), fileLines, sep)),sep)
