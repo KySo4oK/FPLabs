@@ -22,11 +22,12 @@ takeTableFromSelect content = last  (words content)
 
 parseForSelectColumns (command,fileLines) =
       let listOfIndexes = getListOfIndexes ((getColumnsFromCommand command),(splitOn "," (head fileLines)))
-      in map (\listOfIndexes line -> changeLine listOfIndexes line) fileLines
+      in map (\line -> changeLine (listOfIndexes,line)) fileLines
 
 getColumnsFromCommand command = tail (takeWhile (/="FROM") (words command))
 
-changeLine listOfIndexes line = let fields = splitOn "," line
+
+changeLine (listOfIndexes,line) = let fields = splitOn "," line
                                 in intercalate ","(map (getElementByIndex fields) listOfIndexes)
 
 getElementByIndex myList index = if index == 0
@@ -35,12 +36,12 @@ getElementByIndex myList index = if index == 0
 
 getListOfIndexes (columns,listOfColumns) = if null columns
                                            then []
-                                           else [findIndexOfListElem(head columns,listOfColumns)]:
+                                           else (findIndexOfListElem(head columns,listOfColumns)):
                                            getListOfIndexes (tail columns, listOfColumns)
 
 findIndexOfListElem (column,listOfColumns) =  auxFindIndexOfListElem(column,listOfColumns,0)
 
-auxFindIndexOfListElem (column,listOfColumns,index) 
-              | null listOfColumns = error "Element not found" 
+auxFindIndexOfListElem (column,listOfColumns,index)
+              | null listOfColumns = error "Element not found"
               | head listOfColumns == column = index
               | otherwise = auxFindIndexOfListElem(column,(tail listOfColumns), index+1)
