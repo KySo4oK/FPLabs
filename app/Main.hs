@@ -24,7 +24,7 @@ parseForSelectColumns (command,fileLines) =
       let listOfIndexes = getListOfIndexes ((getColumnsFromCommand command),(splitOn "," (head fileLines)))
       in map (\line -> changeLine (listOfIndexes,line)) fileLines
 
-getColumnsFromCommand command = tail (takeWhile (/="FROM") (words command))
+getColumnsFromCommand command = map (delete ',') (tail (takeWhile (/="FROM") (words command)))
 
 
 changeLine (listOfIndexes,line) = let fields = splitOn "," line
