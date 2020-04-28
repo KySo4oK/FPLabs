@@ -29,14 +29,16 @@ filterFileLinesUsingWhere (condition, fileLines, sep) =
           then let lc = splitOn "=" condition in eqFilter (head lc,last lc,fileLines,sep)
           else let lc = splitOn ">" condition in mtFilter (head lc,last lc,fileLines,sep)
 
-eqFilter (column,value,fileLines,sep) = let indexOfCond = findIndexOfListElem (column,(head fileLines))
+eqFilter (column,value,fileLines,sep) =
+          let indexOfCond = findIndexOfListElem (column,head fileLines)
           in filter (\line ->  checkEq (getElementByIndex (splitOn sep line) indexOfCond) value ) fileLines
 
 checkEq a b = if isNumber' a
               then (read a + 0.0) == (read b + 0.0)
               else a==b
 
-mtFilter (column,value,fileLines,sep) = let indexOfCond = findIndexOfListElem (column,(head fileLines))
+mtFilter (column,value,fileLines,sep) =
+          let indexOfCond = findIndexOfListElem (column,head fileLines)
           in filter (\line -> checkMt (getElementByIndex (splitOn sep line) indexOfCond) value ) fileLines
 
 checkMt a b = if isNumber' a
@@ -53,7 +55,7 @@ isNumber' xs  =
     _        -> False
 
 useWhere (line, fileLines, sep) =
-         getContentWithoutWhere (line,(filterFileLinesUsingWhere ((last (words line)), fileLines, sep)),sep)
+         getContentWithoutWhere (line,filterFileLinesUsingWhere (last (words line), fileLines, sep),sep)
 
 parseCommandForFile command = if isSubsequenceOf "load" command
                               then (tail . dropWhile (/='(') . init) command
@@ -77,7 +79,7 @@ getElementByIndex myList index = if index == 0
 
 getListOfIndexes (columns,listOfColumns) = if null columns
                                            then []
-                                           else (findIndexOfListElem(head columns,listOfColumns)):
+                                           else findIndexOfListElem (head columns,listOfColumns):
                                            getListOfIndexes (tail columns, listOfColumns)
 
 findIndexOfListElem (column,listOfColumns) =  auxFindIndexOfListElem(column,listOfColumns,0)
@@ -85,4 +87,4 @@ findIndexOfListElem (column,listOfColumns) =  auxFindIndexOfListElem(column,list
 auxFindIndexOfListElem (column,listOfColumns,index)
               | null listOfColumns = error "Element not found"
               | head listOfColumns == column = index
-              | otherwise = auxFindIndexOfListElem(column,(tail listOfColumns), index+1)
+              | otherwise = auxFindIndexOfListElem (column,tail listOfColumns, index+1)
