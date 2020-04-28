@@ -12,7 +12,7 @@ main = do
 
 getContent (line, fileLines) = if isSubsequenceOf "load" line
                                          then fileLines
-                                         else parseForSelectColumns (line,fileLines)
+                                         else parseForSelectColumns(line,fileLines)
 
 parseCommandForFile command = if isSubsequenceOf "load" command
                               then (tail . dropWhile (/='(') . init) command
@@ -40,8 +40,7 @@ getListOfIndexes (columns,listOfColumns) = if null columns
 
 findIndexOfListElem (column,listOfColumns) =  auxFindIndexOfListElem(column,listOfColumns,0)
 
-auxFindIndexOfListElem (column,listOfColumns,index) = if listOfColumns == []
-                                             then -1 
-                                             else if head listOfColumns == column
-                                                  then index
-                                                  else auxFindIndexOfListElem(column,(tail listOfColumns), index+1)
+auxFindIndexOfListElem (column,listOfColumns,index) 
+              | null listOfColumns = error "Element not found" 
+              | head listOfColumns == column = index
+              | otherwise = auxFindIndexOfListElem(column,(tail listOfColumns), index+1)
