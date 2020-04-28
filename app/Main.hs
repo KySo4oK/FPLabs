@@ -6,13 +6,13 @@ main = do
     line <- getLine
     handle <- openFile (parseCommandForFile line) ReadMode
     contents <- hGetContents handle
-    putStr getContent(line,contents)
+    putStr ((unlines (getContent(line,(lines contents)))))
     hClose handle
     main
 
-getContent (line, contents) = if isSubsequenceOf "load" line
-                                         then contents
-                                         else parseForSelectColumns (line,(words contents))
+getContent (line, fileLines) = if isSubsequenceOf "load" line
+                                         then fileLines
+                                         else parseForSelectColumns (line,fileLines)
 
 parseCommandForFile command = if isSubsequenceOf "load" command
                               then (tail . dropWhile (/='(') . init) command
@@ -21,13 +21,13 @@ parseCommandForFile command = if isSubsequenceOf "load" command
 takeTableFromSelect content = last  (words content)
 
 parseForSelectColumns (command,fileLines) =
-      let listOfIndexes = getListOfIndexes((getColumnsFromCommand command),(splitOn "," (head fileLines)))
-      in map (changeLine listOfIndexes) (tail fileLines)
+      let listOfIndexes = getListOfIndexes ((getColumnsFromCommand command),(splitOn "," (head fileLines)))
+      in map (\listOfIndexes line -> changeLine listOfIndexes line) fileLines
 
 getColumnsFromCommand command = tail (takeWhile (/="FROM") (words command))
 
 changeLine listOfIndexes line = let fields = splitOn "," line
-                                in map (getElementByIndex fields) listOfIndexes
+                                in intercalate ","(map (getElementByIndex fields) listOfIndexes)
 
 getElementByIndex myList index = if index == 0
                                then head myList
