@@ -14,9 +14,10 @@ getSeparator command = if isSubsequenceOf ".csv" command
                         then ","
                         else "\t"
 
-getContent (line, fileLines, sep) = if isSubsequenceOf "load" line
-                                         then fileLines
-                                         else parseForSelectColumns(line,fileLines,sep)
+getContent (line, fileLines, sep) 
+         | isSubsequenceOf "load" line = fileLines
+         | isSubsequenceOf "DISTINCT" line = nub (parseForSelectColumns(line,fileLines,sep))
+         | otherwise = parseForSelectColumns(line,fileLines,sep)
 
 parseCommandForFile command = if isSubsequenceOf "load" command
                               then (tail . dropWhile (/='(') . init) command
@@ -28,7 +29,7 @@ parseForSelectColumns (command,fileLines,sep) =
       let listOfIndexes = getListOfIndexes ((getColumnsFromCommand command),(splitOn sep (head fileLines)))
       in map (\line -> changeLine (listOfIndexes,line,sep)) fileLines
 
-getColumnsFromCommand command = map (delete ',') (tail (takeWhile (/="FROM") (words command)))
+getColumnsFromCommand command = filter (/="DISTINCT")(map (delete ',') (tail (takeWhile (/="FROM") (words command))))
 
 
 changeLine (listOfIndexes,line,sep) = let fields = splitOn sep line
