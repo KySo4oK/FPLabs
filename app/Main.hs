@@ -30,7 +30,7 @@ filterFileLinesUsingWhere (condition, fileLines, sep) =
           else let lc = splitOn ">" condition in mtFilter (head lc,last lc,fileLines,sep)
 
 eqFilter (column,value,fileLines,sep) =
-          let indexOfCond = findIndexOfListElem (column,head fileLines)
+          let indexOfCond = findIndexOfListElem (column,splitOn sep (head fileLines))
           in filter (\line ->  checkEq (getElementByIndex (splitOn sep line) indexOfCond) value ) fileLines
 
 checkEq a b = if isNumber' a
@@ -38,7 +38,7 @@ checkEq a b = if isNumber' a
               else a==b
 
 mtFilter (column,value,fileLines,sep) =
-          let indexOfCond = findIndexOfListElem (column,head fileLines)
+          let indexOfCond = findIndexOfListElem (column,splitOn sep (head fileLines))
           in filter (\line -> checkMt (getElementByIndex (splitOn sep line) indexOfCond) value ) fileLines
 
 checkMt a b = if isNumber' a
@@ -85,6 +85,6 @@ getListOfIndexes (columns,listOfColumns) = if null columns
 findIndexOfListElem (column,listOfColumns) =  auxFindIndexOfListElem(column,listOfColumns,0)
 
 auxFindIndexOfListElem (column,listOfColumns,index)
-              | null listOfColumns = error "Element not found"
+              | null listOfColumns = error "Element not found exc"
               | head listOfColumns == column = index
               | otherwise = auxFindIndexOfListElem (column,tail listOfColumns, index+1)
