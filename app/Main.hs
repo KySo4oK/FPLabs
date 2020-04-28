@@ -24,15 +24,15 @@ getContentWithoutWhere (line, fileLines, sep)
          | otherwise = parseForSelectColumns(line,fileLines,sep)
 
 filterFileLinesUsingWhere (condition, fileLines, sep) =
-          if (isSubsequenceOf "=" condition)
-          then eqFilter ((splitOn "=" condition),fileLines,sep)
-          else mtFilter ((splitOn ">" condition),fileLines,sep)
+          if isSubsequenceOf "=" condition
+          then let lc = splitOn "=" condition in eqFilter ((read (head lc)),(last lc),fileLines,sep)
+          else let lc = splitOn ">" condition in mtFilter ((read (head lc)),(last lc),fileLines,sep)
 
-eqFilter (listOfCond,fileLines,sep) = let indexOfCond = findIndexOfListElem (head listOfCond) (head fileLines)
-          in filter (\line -> getElementByIndex line indexOfCond == read . tail listOfCond) fileLines
+eqFilter (column,value,fileLines,sep) = let indexOfCond = findIndexOfListElem column (head fileLines)
+          in filter (\line ->  read (getElementByIndex (splitOn sep line) indexOfCond) == read value) fileLines
 
-mtFilter (listOfCond,fileLines,sep) = let indexOfCond = findIndexOfListElem (head listOfCond) (head fileLines)
-          in filter (\line -> getElementByIndex line indexOfCond > read . tail listOfCond) fileLines
+mtFilter (column,value,fileLines,sep) = let indexOfCond = findIndexOfListElem column (head fileLines)
+          in filter (\line -> read (getElementByIndex (splitOn sep line) indexOfCond) > read value) fileLines
 
 useWhere (line, fileLines, sep) =
          getContentWithoutWhere (line,(filterFileLinesUsingWhere ((last (words line)), fileLines, sep)),sep)
@@ -44,7 +44,7 @@ parseCommandForFile command = if isSubsequenceOf "load" command
 takeTableFromSelect content = head  (tail (dropWhile (/="FROM") (words content)))
 
 parseForSelectColumns (command,fileLines,sep) =
-      let listOfIndexes = getListOfIndexes ((getColumnsFromCommand command),(splitOn sep (head fileLines)))
+      let listOfIndexes = getListOfIndexes (getColumnsFromCommand command,splitOn sep (head fileLines))
       in map (\line -> changeLine (listOfIndexes,line,sep)) fileLines
 
 getColumnsFromCommand command = filter (/="DISTINCT")(map (delete ',') (tail (takeWhile (/="FROM") (words command))))
