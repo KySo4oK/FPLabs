@@ -7,13 +7,13 @@ main = do
     line <- getLine
     handle <- openFile (parseCommandForFile line) ReadMode
     contents <- hGetContents handle
-    putStr ((unlines (getContent(line,(lines contents),(getSeparator line)))))
+    putStr (unlines (getContent(line,lines contents,getSeparator line)))
     hClose handle
     main
 
 getSeparator command = if isSubsequenceOf ".csv" command
-                        then ","
-                        else "\t"
+                       then ","
+                       else "\t"
 
 getContent (line, fileLines, sep)
          | isSubsequenceOf "WHERE" line = useWhere (line, fileLines, sep)
