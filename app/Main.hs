@@ -23,7 +23,7 @@ parseCommandForFile command = if isSubsequenceOf "load" command
                               then (tail . dropWhile (/='(') . init) command
                               else takeTableFromSelect command
 
-takeTableFromSelect content = last  (words content)
+takeTableFromSelect content = head  (tail (dropWhile (/="FROM") (words content)))
 
 parseForSelectColumns (command,fileLines,sep) =
       let listOfIndexes = getListOfIndexes ((getColumnsFromCommand command),(splitOn sep (head fileLines)))
