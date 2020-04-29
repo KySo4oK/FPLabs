@@ -30,29 +30,12 @@ filterFileLinesUsingWhere (condition, fileLines, sep) =
           else let lc = splitOn ">" condition in whereFilter (head lc,last lc,fileLines,sep,checkMt)
 
 whereFilter (column,value,fileLines,sep, func) =
-          in filter (\line ->  
+          in filter (\line ->
           func (getElementByIndex (splitOn sep line) findIndexOfListElem (column,splitOn sep (head fileLines)))value)
           fileLines
-          
---        listOfConditions - all after WHERE  
-parseFilter (listOfConditions,listOfRows) = parseOR(splitOn "OR" listOfConditions, listOfRows)
 
-parseOR([], listOfRows) = false
-parseOR(parsedByOR, listOfRows) = 
-          parseAND(splitOn "AND" (head parsedByOR), listOfRows) || parseOR(tail parsedByOR, listOfRows)
-
-parseAND([], listOfRows) = false
-parseAND(parsedByAND, listOfRows) = 
-          parseNOT(head parsedByAND, listOfRows) && parsedByAND(tail parsedByAND, listOfRows) 
-
-parseNOT(oneCondition, listOfRows) =
-          if isSubsequenceOf "NOT" oneCondition
-          then evaluate(tail oneCondition, listOfRows)
-          else evaluate(oneCondition, listOfRows)
-
-evaluate(oneCondition, listOfRows) =
-          if isSubsequenceOf "=" condition
-          then checkEq (head )
+condFilter listOfCond line =
+          if (head listOfCond == "NOT")
 
 checkEq a b = if isNumber' a
               then (read a + 0.0) == (read b + 0.0)
