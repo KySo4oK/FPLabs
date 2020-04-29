@@ -9,7 +9,7 @@ main = do
     contents <- hGetContents handle
     putStr (unlines (getContent(line,lines contents,getSeparator line)))
     hClose handle
-    main
+    main 
 
 getSeparator command = if isSubsequenceOf ".csv" command
                        then ","
