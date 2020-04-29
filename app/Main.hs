@@ -35,7 +35,7 @@ condFilter headOfFile listOfCond line =
           else (evaluate headOfFile (takeFirstCond listOfCond) line) && (condFilter headOfFile (takeRestOfCond listOfCond) line)
 
 evaluate headOfFile condition line = if isSubsequenceOf "NOT" condition
-                                     then (not (evaluateSimple headOfFile condition line)
+                                     then (not (evaluateSimple headOfFile condition line))
                                      else evaluateSimple headOfFile condition line
 
 evaluateSimple headOfFile condition line =
