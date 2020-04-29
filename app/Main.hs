@@ -24,18 +24,41 @@ getContentWithoutWhere (line, fileLines, sep)
          | isSubsequenceOf "DISTINCT" line = nub (parseForSelectColumns(line,fileLines,sep))
          | otherwise = parseForSelectColumns(line,fileLines,sep)
 
-filterFileLinesUsingWhere (condition, fileLines, sep) =
-          if isSubsequenceOf "=" condition
-          then let lc = splitOn "=" condition in whereFilter (head lc,last lc,fileLines,sep,checkEq)
-          else let lc = splitOn ">" condition in whereFilter (head lc,last lc,fileLines,sep,checkMt)
-
-whereFilter (column,value,fileLines,sep, func) =
-          in filter (\line ->
-          func (getElementByIndex (splitOn sep line) findIndexOfListElem (column,splitOn sep (head fileLines)))value)
+filterFileLinesUsingWhere (listOfCond, fileLines, sep) =
+          filter (\line -> condFilter (head fileLines) listOfCond line)
           fileLines
 
-condFilter listOfCond line =
-          if (head listOfCond == "NOT")
+condFilter headOfFile [] line = False
+condFilter headOfFile listOfCond line =
+          if isORFirst listOfCond
+          then (evaluate headOfFile (takeFirstCond listOfCond) line) || (condFilter headOfFile (takeRestOfCond listOfCond) line)
+          else (evaluate headOfFile (takeFirstCond listOfCond) line) && (condFilter headOfFile (takeRestOfCond listOfCond) line)
+
+evaluate headOfFile condition line = if isSubsequenceOf "NOT" condition
+                                     then (not (evaluateSimple headOfFile condition line)
+                                     else evaluateSimple headOfFile condition line
+
+evaluateSimple headOfFile condition line =
+          if isSubsequenceOf "=" condition
+          then checkEqCond headOfFile (splitOn "=" condition) line
+          else checkMtCond headOfFile (splitOn ">" condition) line
+
+checkEqCond headOfFile tuple line =
+          checkEq (last tuple) (getElementByIndex line (findIndexOfListElem (head tuple) headOfFile))
+
+checkMtCond headOfFile tuple line =
+          checkMt (last tuple) (getElementByIndex line (findIndexOfListElem (head tuple) headOfFile))
+
+takeFirstCond = takeWhile (isNotORorAND)
+
+takeRestOfCond = let rest = (dropWhile (isNotORorAND))
+                 in if null rest
+                    then []
+                    else tail rest
+
+isOrFirst listOfCond = findIndexOfListElem ("AND",listOfCond) > findIndexOfListElem ("OR",listOfCond)
+
+isNotORorAND cond = cond/="AND" || cond/="OR"
 
 checkEq a b = if isNumber' a
               then (read a + 0.0) == (read b + 0.0)
@@ -55,7 +78,9 @@ isNumber' xs  =
     _        -> False
 
 useWhere (line, fileLines, sep) =
-         getContentWithoutWhere (line,head fileLines : filterFileLinesUsingWhere (last (words line), fileLines, sep),sep)
+         getContentWithoutWhere (line,head fileLines : filterFileLinesUsingWhere (takeAllCond (words line), fileLines, sep),sep)
+
+takeAllCond line =  tail (dropWhile (/="WHERE"))
 
 parseCommandForFile command = if isSubsequenceOf "load" command
                               then (tail . dropWhile (/='(') . init) command
@@ -86,6 +111,6 @@ getListOfIndexes (columns,listOfColumns) = if null columns
 findIndexOfListElem (column,listOfColumns) =  auxFindIndexOfListElem(column,listOfColumns,0)
 
 auxFindIndexOfListElem (column,listOfColumns,index)
-              | null listOfColumns = error "Element not found exc"
+              | null listOfColumns = (maxBound :: Int)
               | head listOfColumns == column = index
               | otherwise = auxFindIndexOfListElem (column,tail listOfColumns, index+1)
