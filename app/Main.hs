@@ -9,7 +9,7 @@ main = do
     contents <- hGetContents handle
     putStr (unlines (getContent(line,lines contents,getSeparator line)))
     hClose handle
-    main 
+    main
 
 getSeparator command = if isSubsequenceOf ".csv" command
                        then ","
@@ -26,20 +26,16 @@ getContentWithoutWhere (line, fileLines, sep)
 
 filterFileLinesUsingWhere (condition, fileLines, sep) =
           if isSubsequenceOf "=" condition
-          then let lc = splitOn "=" condition in eqFilter (head lc,last lc,fileLines,sep)
-          else let lc = splitOn ">" condition in mtFilter (head lc,last lc,fileLines,sep)
+          then let lc = splitOn "=" condition in whereFilter (head lc,last lc,fileLines,sep,checkEq)
+          else let lc = splitOn ">" condition in whereFilter (head lc,last lc,fileLines,sep,checkMt)
 
-eqFilter (column,value,fileLines,sep) =
+whereFilter (column,value,fileLines,sep, func) =
           let indexOfCond = findIndexOfListElem (column,splitOn sep (head fileLines))
-          in filter (\line ->  checkEq (getElementByIndex (splitOn sep line) indexOfCond) value ) fileLines
+          in filter (\line ->  func (getElementByIndex (splitOn sep line) indexOfCond) value ) fileLines
 
 checkEq a b = if isNumber' a
               then (read a + 0.0) == (read b + 0.0)
               else a==b
-
-mtFilter (column,value,fileLines,sep) =
-          let indexOfCond = findIndexOfListElem (column,splitOn sep (head fileLines))
-          in filter (\line -> checkMt (getElementByIndex (splitOn sep line) indexOfCond) value ) fileLines
 
 checkMt a b = if isNumber' a
               then (read a + 0.0) > (read b + 0.0)
