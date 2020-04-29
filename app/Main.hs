@@ -55,7 +55,7 @@ isNumber' xs  =
     _        -> False
 
 useWhere (line, fileLines, sep) =
-         getContentWithoutWhere (line,filterFileLinesUsingWhere (last (words line), fileLines, sep),sep)
+         getContentWithoutWhere (line,head fileLines : filterFileLinesUsingWhere (last (words line), fileLines, sep),sep)
 
 parseCommandForFile command = if isSubsequenceOf "load" command
                               then (tail . dropWhile (/='(') . init) command
@@ -73,6 +73,7 @@ getColumnsFromCommand command = filter (/="DISTINCT")(map (delete ',') (tail (ta
 changeLine (listOfIndexes,line,sep) = let fields = splitOn sep line
                                 in intercalate sep (map (getElementByIndex fields) listOfIndexes)
 
+getElementByIndex [] index = error "Empty list exc"
 getElementByIndex myList index = if index == 0
                                then head myList
                                else getElementByIndex (tail myList) (index - 1)
