@@ -30,8 +30,8 @@ checkForAggregateFunc (line, fileLines, sep) = if containsAggFunc line
 replaceAggFuncWithParam :: (String, [String], String) -> [String]
 replaceAggFuncWithParam (line, fileLines, sep) = iterateFunc(
                                                   getAggregateFuncFromCommand line,
-                                                  getContent (unwords (removeAggFunc (words line)),
-                                                  fileLines, sep), sep)
+                                                  tail (getContent (unwords (removeAggFunc (words line)),
+                                                  fileLines, sep)), sep)
 
 iterateFunc :: ([String], [String], String) -> [String]
 iterateFunc (func, fileLines, sep) = [unwords func , intercalate sep
