@@ -8,7 +8,7 @@ main = do
     line <- getLine
     handle <- openFile (parseCommandForFile line) ReadMode
     contents <- hGetContents handle
-    putStr (unlines (intercalateOrderedContent(line,lines contents,getSeparator line)))
+    putStr (unlines (getContentWithOrder(line,lines contents,getSeparator line)))
     hClose handle
     main
 
@@ -17,8 +17,8 @@ getSeparator command = if isSubsequenceOf ".csv" command
                        then ","
                        else "\t"
 
-intercalateOrderedContent :: (String, [String], String) -> [String]
-intercalateOrderedContent (line, fileLines, sep) = if isSubsequenceOf "ORDER" line
+getContentWithOrder :: (String, [String], String) -> [String]
+getContentWithOrder (line, fileLines, sep) = if isSubsequenceOf "ORDER" line
           then map (intercalate sep) (getOrderedContent (line, fileLines, sep))
           else getContent (line, fileLines, sep)
 
