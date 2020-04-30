@@ -104,7 +104,7 @@ isNumber' xs  =
     _        -> False
 
 takeAllCond :: [String] -> [String]
-takeAllCond wordsOfCommand =  tail (dropWhile (/="WHERE") wordsOfCommand)
+takeAllCond wordsOfCommand =  tail (takeWhile (/="ORDER") (dropWhile (/="WHERE") wordsOfCommand))
 
 parseCommandForFile :: String -> String
 parseCommandForFile command = if isSubsequenceOf "load" command
