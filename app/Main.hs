@@ -8,7 +8,7 @@ main = do
     line <- getLine
     handle <- openFile (parseCommandForFile line) ReadMode
     contents <- hGetContents handle
-    putStr (unlines (getOrderedContent(line,lines contents,getSeparator line)))
+    putStr (unlines (intercalateOrderedContent(line,lines contents,getSeparator line)))
     hClose handle
     main
 
@@ -17,27 +17,31 @@ getSeparator command = if isSubsequenceOf ".csv" command
                        then ","
                        else "\t"
 
-getOrderedContent :: (String, [String], String) -> [String]
+intercalateOrderedContent :: (String, [String], String) -> [String]
+intercalateOrderedContent (line, fileLines, sep) =
+          map (intercalate sep) (getOrderedContent (line, fileLines, sep))
+
+getOrderedContent :: (String, [String], String) -> [[String]]
 getOrderedContent (line, fileLines, sep)
           | isSubsequenceOf "DESC" line = reverse
            (orderBy ( getListOfColumnsForOrder (init (words line)),getContent (line, fileLines, sep),sep))
-          | isSubsequenceOf "ASC" line = 
+          | isSubsequenceOf "ASC" line =
             orderBy (getListOfColumnsForOrder (init (words line)),getContent (line, fileLines, sep),sep)
           | otherwise =  orderBy (getListOfColumnsForOrder (words line),getContent (line, fileLines, sep),sep)
 
 getListOfColumnsForOrder :: [String] -> [String]
-getListOfColumnsForOrder command = map (delete ',') (tail (dropWhile (/="BY") (words command)))
+getListOfColumnsForOrder command = map (delete ',') (tail (dropWhile (/="BY") command))
 
-orderBy :: (String, [String], String) -> [String]
+orderBy :: ([String], [String], String) -> [[String]]
 orderBy (columns, fileLines, sep) = let indexes = getListOfIndexes (columns,splitOn sep (head fileLines))
-         in sortBy (recursiveSort indexes) (splitOn sep fileLines) 
+         in sortBy (sortBy' indexes) (map (splitOn sep) fileLines)
 
-sortBy :: [Int] -> [String] -> Ordering
-sortBy [] line1 line2 = LT 
-sortBy indexes line1 line2 = let currentOrder = getElementByIndex line1 (head indexes) `compare`
+sortBy' :: [Int] -> [String] -> [String] -> Ordering
+sortBy' [] line1 line2 = LT
+sortBy' indexes line1 line2 = let currentOrder = getElementByIndex line1 (head indexes) `compare`
                                                 getElementByIndex line2 (head indexes)
                              in if currentOrder == EQ
-                                then sortBy  (tail indexes) line1 line2
+                                then sortBy'  (tail indexes) line1 line2
                                 else currentOrder
 
 getContent :: (String, [String], String) -> [String]
