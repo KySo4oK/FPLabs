@@ -3,7 +3,7 @@ import Data.List
 import Data.List.Split
 import Data.Char
 
-main :: IO 
+main :: IO b
 main = do
     line <- getLine
     handle <- openFile (parseCommandForFile line) ReadMode
@@ -35,15 +35,20 @@ getContentWithoutWhere (line, fileLines, sep)
 
 filterFileLinesUsingWhere :: ([String], [String], String) -> [String]
 filterFileLinesUsingWhere (listOfCond, fileLines, sep) =
-          filter (\line -> condFilter (splitOn sep (head fileLines)) listOfCond (splitOn sep line))
+          filter (filterLine (listOfCond, fileLines, sep))
           (tail fileLines)
+
+filterLine :: ([String], [String], String) -> String -> Bool
+filterLine (listOfCond, fileLines, sep) line = condFilter (splitOn sep (head fileLines)) listOfCond (splitOn sep line)
 
 condFilter :: [String] -> [String] -> [String] -> Bool
 condFilter headOfFile [] line = False
 condFilter headOfFile listOfCond line =
           if isOrFirst listOfCond
-          then (evaluate headOfFile (takeFirstCond listOfCond) line) || (condFilter headOfFile (takeRestOfCond listOfCond) line)
-          else (evaluate headOfFile (takeFirstCond listOfCond) line) && (condFilter headOfFile (takeRestOfCond listOfCond) line)
+          then evaluate headOfFile (takeFirstCond listOfCond) line ||
+           condFilter headOfFile (takeRestOfCond listOfCond) line
+          else evaluate headOfFile (takeFirstCond listOfCond) line &&
+           condFilter headOfFile (takeRestOfCond listOfCond) line
 
 evaluate :: [String] -> [String] -> [String] -> Bool
 evaluate headOfFile condition line = if isSubsequenceOf ["NOT"] condition
