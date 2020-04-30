@@ -38,7 +38,7 @@ condFilter headOfFile listOfCond line =
           then (evaluate headOfFile (takeFirstCond listOfCond) line) || (condFilter headOfFile (takeRestOfCond listOfCond) line)
           else (evaluate headOfFile (takeFirstCond listOfCond) line) && (condFilter headOfFile (takeRestOfCond listOfCond) line)
 
-evaluate headOfFile condition line = if isSubsequenceOf "NOT" condition
+evaluate headOfFile condition line = if isSubsequenceOf ["NOT"] condition
                                      then not (evaluateSimple headOfFile (last condition) line)
                                      else evaluateSimple headOfFile (head condition) line
 
@@ -62,7 +62,7 @@ takeRestOfCond line = let rest = dropWhile isNotORorAND line
 
 isOrFirst listOfCond = findIndexOfListElem ("AND",listOfCond) > findIndexOfListElem ("OR",listOfCond)
 
-isNotORorAND cond = not (cond/="AND" || cond/="OR")
+isNotORorAND cond = not (cond=="AND" || cond=="OR")
 
 checkEq a b = if isNumber' a
               then (read a + 0.0) == (read b + 0.0)
