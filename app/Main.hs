@@ -44,10 +44,10 @@ filterLine (listOfCond, fileLines, sep) line = condFilter (splitOn sep (head fil
 condFilter :: [String] -> [String] -> [String] -> Bool
 condFilter headOfFile [] line = False
 condFilter headOfFile listOfCond line =
-          if isOrFirst listOfCond
-          then evaluate headOfFile (takeFirstCond listOfCond) line ||
+          if isAndFirst listOfCond
+          then evaluate headOfFile (takeFirstCond listOfCond) line &&
            condFilter headOfFile (takeRestOfCond listOfCond) line
-          else evaluate headOfFile (takeFirstCond listOfCond) line &&
+          else evaluate headOfFile (takeFirstCond listOfCond) line ||
            condFilter headOfFile (takeRestOfCond listOfCond) line
 
 evaluate :: [String] -> [String] -> [String] -> Bool
@@ -67,7 +67,7 @@ checkEqCond headOfFile row value line =
 
 checkMtCond :: Eq a => [a] -> a -> String -> [String] -> Bool
 checkMtCond headOfFile row value line =
-          checkMt value (getElementByIndex line (findIndexOfListElem (row,headOfFile)))
+          checkMt (getElementByIndex line (findIndexOfListElem (row,headOfFile))) value
 
 takeFirstCond :: [String] -> [String]
 takeFirstCond = takeWhile isNotORorAND
@@ -78,8 +78,8 @@ takeRestOfCond line = let rest = dropWhile isNotORorAND line
                     then rest
                     else tail rest
 
-isOrFirst :: [String] -> Bool
-isOrFirst listOfCond = findIndexOfListElem ("AND",listOfCond) > findIndexOfListElem ("OR",listOfCond)
+isAndFirst :: [String] -> Bool
+isAndFirst listOfCond = findIndexOfListElem ("OR",listOfCond) > findIndexOfListElem ("AND",listOfCond)
 
 isNotORorAND :: String -> Bool
 isNotORorAND cond = not (cond=="AND" || cond=="OR")
