@@ -32,26 +32,26 @@ replaceAggFuncWithParam (line, fileLines, sep) = iterateFunc(
                                                   getAggregateFuncFromCommand line,
                                                   getContent (unwords (removeAggFunc (words line)),
                                                   fileLines, sep), sep)
-           
-iterateFunc :: (String, [String], String) -> [String]
-iterateFunc (func, fileLines, sep) = unwords func : intercalate sep
-            (map (\fun -> executeFunc(fun,findIndexOfListElem(fun,func),fileLines,sep))  func)
 
-executeFunc :: (String, Int, [String], String) -> String 
-executeFunc (fun, index, fileLines, sep) = if fun isSubsequenceOf "AVG" 
-                                           then myAvg (map 
-                                           (\line -> (read (getElementByIndex (splitOn sep line) index) + 0.0)
-                                           fileLines))
-                                           else minimum (map 
-                                           (\line -> (read (getElementByIndex (splitOn sep line) index) + 0.0)
-                                           fileLines))
+iterateFunc :: ([String], [String], String) -> [String]
+iterateFunc (func, fileLines, sep) = [unwords func , intercalate sep
+            (map (\fun -> show (executeFunc(fun,findIndexOfListElem(fun,func),fileLines,sep)))  func)]
+
+executeFunc :: (String, Int, [String], String) -> Int
+executeFunc (fun, index, fileLines, sep) = if isSubsequenceOf "AVG" fun
+                                           then myAvg (map
+                                           (\line -> read (getElementByIndex (splitOn sep line) index) :: Int)
+                                           fileLines)
+                                           else minimum (map
+                                           (\line -> read (getElementByIndex (splitOn sep line) index) :: Int)
+                                           fileLines)
 
 myAvg :: [Int] -> Int
-myAvg list = sum list / length list
-           
-getAggregateFuncFromCommand :: String -> [String]          
-getAggregateFuncFromCommand command = filter containsAggFunc (words command)          
-           
+myAvg list = sum list `div` length list
+
+getAggregateFuncFromCommand :: String -> [String]
+getAggregateFuncFromCommand command = filter containsAggFunc (words command)
+
 removeAggFunc :: [String] -> [String]
 removeAggFunc = map (\oneCommand -> if containsAggFunc oneCommand
                                     then changeToParam oneCommand
