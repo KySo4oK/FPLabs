@@ -28,8 +28,30 @@ checkForAggregateFunc (line, fileLines, sep) = if containsAggFunc line
                                                else getContentWithOrder (line, fileLines, sep)
 
 replaceAggFuncWithParam :: (String, [String], String) -> [String]
-replaceAggFuncWithParam (line, fileLines, sep) = getContent (unwords (removeAggFunc (words line)), fileLines, sep)
+replaceAggFuncWithParam (line, fileLines, sep) = iterateFunc(
+                                                  getAggregateFuncFromCommand line,
+                                                  getContent (unwords (removeAggFunc (words line)),
+                                                  fileLines, sep), sep)
+           
+iterateFunc :: (String, [String], String) -> [String]
+iterateFunc (func, fileLines, sep) = unwords func : intercalate sep
+            (map (\fun -> executeFunc(fun,findIndexOfListElem(fun,func),fileLines,sep))  func)
 
+executeFunc :: (String, Int, [String], String) -> String 
+executeFunc (fun, index, fileLines, sep) = if fun isSubsequenceOf "AVG" 
+                                           then myAvg (map 
+                                           (\line -> (read (getElementByIndex (splitOn sep line) index) + 0.0)
+                                           fileLines))
+                                           else minimum (map 
+                                           (\line -> (read (getElementByIndex (splitOn sep line) index) + 0.0)
+                                           fileLines))
+
+myAvg :: [Int] -> Int
+myAvg list = sum list / length list
+           
+getAggregateFuncFromCommand :: String -> [String]          
+getAggregateFuncFromCommand command = filter containsAggFunc (words command)          
+           
 removeAggFunc :: [String] -> [String]
 removeAggFunc = map (\oneCommand -> if containsAggFunc oneCommand
                                     then changeToParam oneCommand
