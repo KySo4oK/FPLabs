@@ -8,7 +8,7 @@ main = do
     line <- getLine
     handle <- openFile (parseCommandForFile line) ReadMode
     contents <- hGetContents handle
-    putStr (unlines (getContentWithOrder(line,lines contents,getSeparator line)))
+    putStr (unlines (checkForAggregateFunc (line,lines contents,getSeparator line)))
     hClose handle
     main
 
@@ -21,6 +21,28 @@ getContentWithOrder :: (String, [String], String) -> [String]
 getContentWithOrder (line, fileLines, sep) = if isSubsequenceOf "ORDER" line
           then map (intercalate sep) (getOrderedContent (line, fileLines, sep))
           else getContent (line, fileLines, sep)
+
+checkForAggregateFunc :: (String, [String], String) -> [String]
+checkForAggregateFunc (line, fileLines, sep) = if containsAggFunc line
+                                               then replaceAggFuncWithParam (line, fileLines, sep)
+                                               else getContentWithOrder (line, fileLines, sep)
+
+replaceAggFuncWithParam :: (String, [String], String) -> [String]
+replaceAggFuncWithParam (line, fileLines, sep) = getContent (unwords (removeAggFunc (words line)), fileLines, sep)
+
+removeAggFunc :: [String] -> [String]
+removeAggFunc = map (\oneCommand -> if containsAggFunc oneCommand
+                                    then changeToParam oneCommand
+                                    else oneCommand)
+
+changeToParam :: String -> String
+changeToParam column = if isSubsequenceOf "," column
+                       then delete ')' (tail (dropWhile (/='(') column))
+                       else init (tail (dropWhile (/='(') column))
+
+
+containsAggFunc :: String -> Bool
+containsAggFunc line = isSubsequenceOf "AVG" line || isSubsequenceOf "MIN" line
 
 getOrderedContent :: (String, [String], String) -> [[String]]
 getOrderedContent (line, fileLines, sep)
