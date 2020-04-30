@@ -19,46 +19,50 @@ getContent (line, fileLines, sep)
          | isSubsequenceOf "WHERE" line = useWhere (line, fileLines, sep)
          | otherwise = getContentWithoutWhere (line, fileLines, sep)
 
+useWhere (line, fileLines, sep) =
+         getContentWithoutWhere (line,head fileLines :
+          filterFileLinesUsingWhere (takeAllCond (words line), fileLines, sep),sep)
+
 getContentWithoutWhere (line, fileLines, sep)
          | isSubsequenceOf "load" line = fileLines
          | isSubsequenceOf "DISTINCT" line = nub (parseForSelectColumns(line,fileLines,sep))
          | otherwise = parseForSelectColumns(line,fileLines,sep)
 
 filterFileLinesUsingWhere (listOfCond, fileLines, sep) =
-          filter (\line -> condFilter (head fileLines) listOfCond line)
-          fileLines
+          filter (\line -> condFilter (splitOn sep (head fileLines)) listOfCond (splitOn sep line))
+          (tail fileLines)
 
 condFilter headOfFile [] line = False
 condFilter headOfFile listOfCond line =
-          if isORFirst listOfCond
+          if isOrFirst listOfCond
           then (evaluate headOfFile (takeFirstCond listOfCond) line) || (condFilter headOfFile (takeRestOfCond listOfCond) line)
           else (evaluate headOfFile (takeFirstCond listOfCond) line) && (condFilter headOfFile (takeRestOfCond listOfCond) line)
 
 evaluate headOfFile condition line = if isSubsequenceOf "NOT" condition
-                                     then (not (evaluateSimple headOfFile condition line))
-                                     else evaluateSimple headOfFile condition line
+                                     then not (evaluateSimple headOfFile (last condition) line)
+                                     else evaluateSimple headOfFile (head condition) line
 
 evaluateSimple headOfFile condition line =
           if isSubsequenceOf "=" condition
-          then checkEqCond headOfFile (splitOn "=" condition) line
-          else checkMtCond headOfFile (splitOn ">" condition) line
+          then let lc = splitOn "=" condition in checkEqCond headOfFile (head lc) (last lc) line
+          else let lc = splitOn ">" condition in checkMtCond headOfFile (head lc) (last lc) line
 
-checkEqCond headOfFile tuple line =
-          checkEq (last tuple) (getElementByIndex line (findIndexOfListElem (head tuple) headOfFile))
+checkEqCond headOfFile row value line =
+          checkEq value (getElementByIndex line (findIndexOfListElem (row,headOfFile)))
 
-checkMtCond headOfFile tuple line =
-          checkMt (last tuple) (getElementByIndex line (findIndexOfListElem (head tuple) headOfFile))
+checkMtCond headOfFile row value line =
+          checkMt value (getElementByIndex line (findIndexOfListElem (row,headOfFile)))
 
-takeFirstCond = takeWhile (isNotORorAND)
+takeFirstCond = takeWhile isNotORorAND
 
-takeRestOfCond = let rest = (dropWhile (isNotORorAND))
+takeRestOfCond line = let rest = dropWhile isNotORorAND line
                  in if null rest
-                    then []
+                    then rest
                     else tail rest
 
 isOrFirst listOfCond = findIndexOfListElem ("AND",listOfCond) > findIndexOfListElem ("OR",listOfCond)
 
-isNotORorAND cond = cond/="AND" || cond/="OR"
+isNotORorAND cond = not (cond/="AND" || cond/="OR")
 
 checkEq a b = if isNumber' a
               then (read a + 0.0) == (read b + 0.0)
@@ -77,10 +81,7 @@ isNumber' xs  =
     ('.':ys) -> all isDigit ys
     _        -> False
 
-useWhere (line, fileLines, sep) =
-         getContentWithoutWhere (line,head fileLines : filterFileLinesUsingWhere (takeAllCond (words line), fileLines, sep),sep)
-
-takeAllCond line =  tail (dropWhile (/="WHERE"))
+takeAllCond wordsOfCommand =  tail (dropWhile (/="WHERE") wordsOfCommand)
 
 parseCommandForFile command = if isSubsequenceOf "load" command
                               then (tail . dropWhile (/='(') . init) command
@@ -111,6 +112,6 @@ getListOfIndexes (columns,listOfColumns) = if null columns
 findIndexOfListElem (column,listOfColumns) =  auxFindIndexOfListElem(column,listOfColumns,0)
 
 auxFindIndexOfListElem (column,listOfColumns,index)
-              | null listOfColumns = (maxBound :: Int)
+              | null listOfColumns = maxBound :: Int
               | head listOfColumns == column = index
               | otherwise = auxFindIndexOfListElem (column,tail listOfColumns, index+1)
