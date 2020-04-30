@@ -18,8 +18,9 @@ getSeparator command = if isSubsequenceOf ".csv" command
                        else "\t"
 
 intercalateOrderedContent :: (String, [String], String) -> [String]
-intercalateOrderedContent (line, fileLines, sep) =
-          map (intercalate sep) (getOrderedContent (line, fileLines, sep))
+intercalateOrderedContent (line, fileLines, sep) = if isSubsequenceOf "ORDER" line
+          then map (intercalate sep) (getOrderedContent (line, fileLines, sep))
+          else getContent (line, fileLines, sep)
 
 getOrderedContent :: (String, [String], String) -> [[String]]
 getOrderedContent (line, fileLines, sep)
