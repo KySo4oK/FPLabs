@@ -33,11 +33,10 @@ getChangedHead :: (String, String, String) -> String
 getChangedHead (file, rows, sep) = intercalate sep (map ((file ++ ".") ++) (splitOn sep rows))
 
 makeJoin :: (String, [String], [String], String) -> [String]
-makeJoin (line, fileLines1, fileLines2, sep) = if containsRightJoin line
-                                               then makeRightJoin (line, fileLines1, fileLines2, sep)
-                                               else if containsInnerJoin line
-                                                    then makeInnerJoin (line, fileLines1, fileLines2, sep)
-                                                    else makeFullJoin (line, fileLines1, fileLines2, sep)
+makeJoin (line, fileLines1, fileLines2, sep)
+             | containsRightJoin line = makeRightJoin (line, fileLines1, fileLines2, sep)
+             | containsInnerJoin line = makeInnerJoin (line, fileLines1, fileLines2, sep)
+             | otherwise = makeFullJoin (line, fileLines1, fileLines2, sep)
 
 makeRightJoin :: (String, [String], [String], String) -> [String]
 makeRightJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
