@@ -6,11 +6,33 @@ import Data.Char
 main :: IO b
 main = do
     line <- getLine
-    handle <- openFile (parseCommandForFile line) ReadMode
-    contents <- hGetContents handle
-    putStr (unlines (checkForAggregateFunc (line,lines contents,getSeparator line)))
-    hClose handle
+    if containsInnerJoin line
+    then mainWithInnerJoin line
+    else mainWithoutJoin line
     main
+
+mainWithInnerJoin :: String -> IO ()
+mainWithInnerJoin line = do
+                  handle1 <- openFile (parseCommandForFile line) ReadMode
+                  contents1 <- hGetContents handle1
+                  handle2 <- openFile (parseCommandForFile line) ReadMode
+                  contents2 <- hGetContents handle2
+                  putStr (unlines (makeInnerJoin(line,lines contents1,lines contents2,getSeparator line)))
+                  hClose handle1
+                  hClose handle2
+
+mainWithoutJoin :: String -> IO ()
+mainWithoutJoin line = do
+            handle <- openFile (parseCommandForFile line) ReadMode
+            contents <- hGetContents handle
+            putStr (unlines (checkForAggregateFunc (line,lines contents,getSeparator line)))
+            hClose handle
+
+makeInnerJoin :: (String, [String], [String], String) -> [String]
+makeInnerJoin (line, fileLines1, fileLines2, sep) = []
+
+containsInnerJoin :: String -> Bool
+containsInnerJoin = isSubsequenceOf "INNER"
 
 getSeparator :: String -> String
 getSeparator command = if isSubsequenceOf ".csv" command
@@ -209,9 +231,9 @@ getListOfIndexes :: Eq a => ([a], [a]) -> [Int]
 getListOfIndexes (columns,listOfColumns) = if null columns
                                            then []
                                            else findIndexOfListElem (head columns,listOfColumns):
-                                           getListOfIndexes (tail columns, listOfColumns) 
+                                           getListOfIndexes (tail columns, listOfColumns)
 
-findIndexOfListElem :: Eq a => (a, [a]) -> Int 
+findIndexOfListElem :: Eq a => (a, [a]) -> Int
 findIndexOfListElem (column,listOfColumns) =  auxFindIndexOfListElem(column,listOfColumns,0)
 
 auxFindIndexOfListElem :: Eq a => (a, [a], Int) -> Int
