@@ -30,11 +30,12 @@ mainWithoutJoin line = do
 
 makeInnerJoin :: (String, [String], [String], String) -> [String]
 makeInnerJoin (line, fileLines1, fileLines2, sep) =
-            let firstIndex = findIndexOfListElem (getFirstColumnForJoinColumn (parseForJoinColumns line),
-            splitOn sep (head fileLines1))
-                secondIndex = findIndexOfListElem (getSecondColumnForJoinColumn (parseForSelectColumns line),
-            splitOn sep (head fileLines2))
-            in concatMap (\l -> joinMap (fileLines2,firstIndex,secondIndex,sep,l)) fileLines1
+            concatMap (\l -> joinMap (fileLines2,
+            findIndexOfListElem (getFirstColumnForJoinColumn (parseForJoinColumns line),
+            splitOn sep (head fileLines1)),
+            findIndexOfListElem (getSecondColumnForJoinColumn (parseForJoinColumns line),
+            splitOn sep (head fileLines2)),
+            sep,l)) fileLines1
 
 joinMap :: ([String], Int, Int, String, String) -> [String]
 joinMap (fileLines,firstIndex,secondIndex,sep,line) =
