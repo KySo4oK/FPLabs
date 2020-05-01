@@ -18,7 +18,7 @@ mainWithInnerJoin line = do
                   contents1 <- hGetContents handle1
                   handle2 <- openFile (parseCommandForJoinFile line) ReadMode
                   contents2 <- hGetContents handle2
-                  putStr (unlines (makeInnerJoin(line,lines contents1,lines contents2,getSeparator line)))
+                  putStr (unlines (makeJoin(line,lines contents1,lines contents2,getSeparator line)))
                   hClose handle1
                   hClose handle2
 
@@ -32,9 +32,39 @@ mainWithoutJoin line = do
 getChangedHead :: (String, String, String) -> String
 getChangedHead (file, rows, sep) = intercalate sep (map ((file ++ ".") ++) (splitOn sep rows))
 
-makeInnerJoin :: (String, [String], [String], String) -> [String]
-makeInnerJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
+makeJoin :: (String, [String], [String], String) -> [String]
+makeJoin (line, fileLines1, fileLines2, sep) = if containsInnerJoin line
+                                               then makeInnerJoin (line, fileLines1, fileLines2, sep)
+                                               else makeFullJoin (line, fileLines1, fileLines2, sep)
+
+makeFullJoin :: (String, [String], [String], String) -> [String]
+makeFullJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
             changeCommandLikeWithoutJoin line,
+            actualFullJoin (fileLines1, fileLines2, actualInnerJoin (line, fileLines1, fileLines2, sep), sep),
+            sep)
+
+actualFullJoin :: ([String], [String], [String], String) -> [String]
+actualFullJoin (fileLines1, fileLines2, inner, sep) =
+            inner ++
+            getFullLeft (fileLines1,length (splitOn sep fileLines2),inner,sep)  ++
+            getFullRight (fileLines2,length (splitOn sep fileLines1),inner,sep)
+
+getFullLeft :: ([String], Int, [String], sep)
+getFullLeft (left,lr,inner,sep) = let leftPart = map (take (length . head left)) inner in
+            map (++ intercalate sep (replicate lr "null")) (filter (notInPart leftPart) left)
+
+notInPart :: ([String],String) -> Bool
+notInPart [] line = True
+notInPart parts line = if head parts == line
+                       then False
+                       else notInPart(tail parts, line)
+
+getFullRight :: ([String], Int, [String], sep) 
+getFullRight (right,ll,inner,sep) = let rightPart = map (drop (length . head right)) inner in
+            map (intercalate sep (replicate ll "null") ++) (filter (notInPart rightPart) right)
+
+actualInnerJoin :: (String, [String], [String], String) -> [String]
+actualInnerJoin (line, fileLines1, fileLines2, sep) =
             (getChangedHead (parseCommandForFile line,head fileLines1,sep) ++ sep ++
             getChangedHead (parseCommandForJoinFile line,head fileLines2,sep)) :
             concatMap (\l -> joinMap (fileLines2,
@@ -42,7 +72,11 @@ makeInnerJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
             splitOn sep (head fileLines1)),
             findIndexOfListElem (getSecondColumnForJoinColumn (parseForJoinColumns line),
             splitOn sep (head fileLines2)),
-            sep,l)) fileLines1,sep)
+            sep,l)) fileLines1
+
+makeInnerJoin :: (String, [String], [String], String) -> [String]
+makeInnerJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
+            changeCommandLikeWithoutJoin line,actualInnerJoin (line, fileLines1, fileLines2, sep),sep)
 
 
 changeCommandLikeWithoutJoin :: String -> String
@@ -85,7 +119,7 @@ containsInnerJoin :: String -> Bool
 containsInnerJoin = isSubsequenceOf "INNER"
 
 containsJoin :: String -> Bool
-containsInnerJoin = isSubsequenceOf "JOIN"
+containsJoin = isSubsequenceOf "JOIN"
 
 parseCommandForJoinFile :: String -> String
 parseCommandForJoinFile command = head (tail (dropWhile (/="JOIN") (words command)))
