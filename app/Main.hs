@@ -37,6 +37,18 @@ mergeList :: ([String],[String],String) -> [String]
 mergeList ([],lines2,sep) = []
 mergeList (lines1,lines2,sep) = (head lines1 ++ sep ++ head lines2): mergeList (tail lines1,tail lines2, sep)
 
+parseForJoinColumns :: String -> [String] 
+parseForJoinColumns command = tail (dropWhile (/="ON") (words command))
+
+getFirstColumnForJoinColumn :: [String] -> String
+getFirstColumnForJoinColumn columns = getColumnForJoinColumn columns head
+
+getSecondColumnForJoinColumn :: [String] -> String
+getSecondColumnForJoinColumn columns = getColumnForJoinColumn columns last
+
+getColumnForJoinColumn :: t -> (t -> String) -> String
+getColumnForJoinColumn columns func = tail (dropWhile (/='.') (func columns))
+
 containsInnerJoin :: String -> Bool
 containsInnerJoin = isSubsequenceOf "INNER"
 
