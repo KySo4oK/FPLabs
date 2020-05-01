@@ -29,14 +29,23 @@ mainWithoutJoin line = do
             putStr (unlines (checkForAggregateFunc (line,lines contents,getSeparator line)))
             hClose handle
 
+getChangedHead :: (String, String, String) -> String
+getChangedHead (file, rows, sep) = intercalate sep (map ((file ++ ".") ++) (splitOn sep rows))
+
 makeInnerJoin :: (String, [String], [String], String) -> [String]
-makeInnerJoin (line, fileLines1, fileLines2, sep) =
+makeInnerJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (line,
+            (getChangedHead (parseCommandForFile line,head fileLines1,sep) ++ sep ++
+            getChangedHead (parseCommandForJoinFile line,head fileLines2,sep)) :
             concatMap (\l -> joinMap (fileLines2,
             findIndexOfListElem (getFirstColumnForJoinColumn (parseForJoinColumns line),
             splitOn sep (head fileLines1)),
             findIndexOfListElem (getSecondColumnForJoinColumn (parseForJoinColumns line),
             splitOn sep (head fileLines2)),
-            sep,l)) fileLines1
+            sep,l)) fileLines1,sep)
+
+
+changeCommandLikeWithoutJoin :: String -> String
+changeCommandLikeWithoutJoin command = unwords (takeWhile (/="INNER") (words command))
 
 joinMap :: ([String], Int, Int, String, String) -> [String]
 joinMap (fileLines,firstIndex,secondIndex,sep,line) =
