@@ -2,6 +2,7 @@ import System.IO
 import Data.List
 import Data.List.Split
 import Data.Char
+import Debug.Trace
 
 main :: IO b
 main = do
@@ -40,8 +41,11 @@ makeInnerJoin (line, fileLines1, fileLines2, sep) =
 joinMap :: ([String], Int, Int, String, String) -> [String]
 joinMap (fileLines,firstIndex,secondIndex,sep,line) =
             let rightList = findListForJoin (getElementByIndex (splitOn sep line) firstIndex,
-                                             secondIndex, fileLines, sep)
-            in mergeList (replicate (length rightList) line,rightList,sep)
+                                             secondIndex, fileLines, sep) in
+            if null rightList
+            then []
+            else mergeList (replicate (length rightList) line,rightList,sep)
+
 
 findListForJoin :: (String, Int, [String], String) -> [String]
 findListForJoin (value, index, fileLines, sep) =
@@ -237,9 +241,7 @@ takeAllCond :: [String] -> [String]
 takeAllCond wordsOfCommand =  tail (takeWhile (/="ORDER") (dropWhile (/="WHERE") wordsOfCommand))
 
 parseCommandForFile :: String -> String
-parseCommandForFile command = if isSubsequenceOf "load" command
-                              then (tail . dropWhile (/='(') . init) command
-                              else takeTableFromSelect command
+parseCommandForFile = takeTableFromSelect
 
 takeTableFromSelect :: String -> String
 takeTableFromSelect content = head  (tail (dropWhile (/="FROM") (words content)))
