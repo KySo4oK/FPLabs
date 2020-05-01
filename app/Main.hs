@@ -48,7 +48,8 @@ findListForJoin (value, index, fileLines, sep) =
             filter (\line -> getElementByIndex (splitOn sep line) index == value) fileLines
 
 mergeList :: ([String],[String],String) -> [String]
-mergeList ([],lines2,sep) = []
+mergeList ([],_,_) = []
+mergeList (_,[],_) = []
 mergeList (lines1,lines2,sep) = (head lines1 ++ sep ++ head lines2): mergeList (tail lines1,tail lines2, sep)
 
 parseForJoinColumns :: String -> [String]
