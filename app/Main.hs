@@ -15,7 +15,7 @@ mainWithInnerJoin :: String -> IO ()
 mainWithInnerJoin line = do
                   handle1 <- openFile (parseCommandForFile line) ReadMode
                   contents1 <- hGetContents handle1
-                  handle2 <- openFile (parseCommandForFile line) ReadMode
+                  handle2 <- openFile (parseCommandForJoinFile line) ReadMode
                   contents2 <- hGetContents handle2
                   putStr (unlines (makeInnerJoin(line,lines contents1,lines contents2,getSeparator line)))
                   hClose handle1
@@ -32,13 +32,16 @@ makeInnerJoin :: (String, [String], [String], String) -> [String]
 makeInnerJoin (line, fileLines1, fileLines2, sep) = if length fileLines1 > length fileLines2
                                                     then mergeList (fileLines2,fileLines1,sep)
                                                     else mergeList (fileLines1,fileLines2,sep)
-                                                    
+
 mergeList :: ([String],[String],String) -> [String]
 mergeList ([],lines2,sep) = []
-mergeList (lines1,lines2,sep) = (head lines1 ++ sep ++ head lines2): mergeList (tail lines1,tail lines2) 
+mergeList (lines1,lines2,sep) = (head lines1 ++ sep ++ head lines2): mergeList (tail lines1,tail lines2, sep)
 
 containsInnerJoin :: String -> Bool
 containsInnerJoin = isSubsequenceOf "INNER"
+
+parseCommandForJoinFile :: String -> String
+parseCommandForJoinFile command = head (tail (dropWhile (/="JOIN") (words command)))
 
 getSeparator :: String -> String
 getSeparator command = if isSubsequenceOf ".csv" command
