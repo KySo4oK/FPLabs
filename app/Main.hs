@@ -46,21 +46,19 @@ makeFullJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
 actualFullJoin :: ([String], [String], [String], String) -> [String]
 actualFullJoin (fileLines1, fileLines2, inner, sep) =
             inner ++
-            getFullLeft (fileLines1,length (splitOn sep fileLines2),inner,sep)  ++
-            getFullRight (fileLines2,length (splitOn sep fileLines1),inner,sep)
+            getFullLeft (fileLines1,length (splitOn sep (head fileLines2)),inner,sep)  ++
+            getFullRight (fileLines2,length (splitOn sep (head fileLines1)),inner,sep)
 
-getFullLeft :: ([String], Int, [String], sep)
-getFullLeft (left,lr,inner,sep) = let leftPart = map (take (length . head left)) inner in
+getFullLeft :: ([String], Int, [String], String) -> [String]
+getFullLeft (left,lr,inner,sep) = let leftPart = map (take (length (head left))) inner in
             map (++ intercalate sep (replicate lr "null")) (filter (notInPart leftPart) left)
 
-notInPart :: ([String],String) -> Bool
+notInPart :: [String] -> String -> Bool
 notInPart [] line = True
-notInPart parts line = if head parts == line
-                       then False
-                       else notInPart(tail parts, line)
+notInPart parts line = head parts == line && notInPart (tail parts) line
 
-getFullRight :: ([String], Int, [String], sep) 
-getFullRight (right,ll,inner,sep) = let rightPart = map (drop (length . head right)) inner in
+getFullRight :: ([String], Int, [String], String) -> [String]
+getFullRight (right,ll,inner,sep) = let rightPart = map (drop (length  (head right))) inner in
             map (intercalate sep (replicate ll "null") ++) (filter (notInPart rightPart) right)
 
 actualInnerJoin :: (String, [String], [String], String) -> [String]
