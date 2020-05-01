@@ -29,15 +29,28 @@ mainWithoutJoin line = do
             hClose handle
 
 makeInnerJoin :: (String, [String], [String], String) -> [String]
-makeInnerJoin (line, fileLines1, fileLines2, sep) = if length fileLines1 > length fileLines2
-                                                    then mergeList (fileLines2,fileLines1,sep)
-                                                    else mergeList (fileLines1,fileLines2,sep)
+makeInnerJoin (line, fileLines1, fileLines2, sep) =
+            let firstIndex = findIndexOfListElem (getFirstColumnForJoinColumn (parseForJoinColumns line),
+            splitOn sep (head fileLines1))
+                secondIndex = findIndexOfListElem (getSecondColumnForJoinColumn (parseForSelectColumns line),
+            splitOn sep (head fileLines2))
+            in concatMap (\l -> joinMap (fileLines2,firstIndex,secondIndex,sep,l)) fileLines1
+
+joinMap :: ([String], Int, Int, String, String) -> [String]
+joinMap (fileLines,firstIndex,secondIndex,sep,line) =
+            let rightList = findListForJoin (getElementByIndex (splitOn sep line) firstIndex,
+                                             secondIndex, fileLines, sep)
+            in mergeList (replicate (length rightList) line,rightList,sep)
+
+findListForJoin :: (String, Int, [String], String) -> [String]
+findListForJoin (value, index, fileLines, sep) =
+            filter (\line -> getElementByIndex (splitOn sep line) index == value) fileLines
 
 mergeList :: ([String],[String],String) -> [String]
 mergeList ([],lines2,sep) = []
 mergeList (lines1,lines2,sep) = (head lines1 ++ sep ++ head lines2): mergeList (tail lines1,tail lines2, sep)
 
-parseForJoinColumns :: String -> [String] 
+parseForJoinColumns :: String -> [String]
 parseForJoinColumns command = tail (dropWhile (/="ON") (words command))
 
 getFirstColumnForJoinColumn :: [String] -> String
