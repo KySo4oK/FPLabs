@@ -55,7 +55,7 @@ getFullLeft (left,lr,inner,sep) = let leftPart = map (take (length (head left)))
 
 notInPart :: [String] -> String -> Bool
 notInPart [] line = True
-notInPart parts line = head parts == line && notInPart (tail parts) line
+notInPart parts line = head parts /= line && notInPart (tail parts) line
 
 getFullRight :: ([String], Int, [String], String) -> [String]
 getFullRight (right,ll,inner,sep) = let rightPart = map (drop (length  (head right))) inner in
