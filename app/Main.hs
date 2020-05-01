@@ -33,7 +33,8 @@ getChangedHead :: (String, String, String) -> String
 getChangedHead (file, rows, sep) = intercalate sep (map ((file ++ ".") ++) (splitOn sep rows))
 
 makeInnerJoin :: (String, [String], [String], String) -> [String]
-makeInnerJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (line,
+makeInnerJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
+            changeCommandLikeWithoutJoin line,
             (getChangedHead (parseCommandForFile line,head fileLines1,sep) ++ sep ++
             getChangedHead (parseCommandForJoinFile line,head fileLines2,sep)) :
             concatMap (\l -> joinMap (fileLines2,
@@ -271,8 +272,8 @@ changeLine (listOfIndexes,line,sep) = let fields = splitOn sep line
 getElementByIndex :: (Eq t, Num t) => [a] -> t -> a
 getElementByIndex [] index = error "Empty list exc"
 getElementByIndex myList index = if index == 0
-                               then head myList
-                               else getElementByIndex (tail myList) (index - 1)
+                                 then head myList
+                                 else getElementByIndex (tail myList) (index - 1)
 
 getListOfIndexes :: Eq a => ([a], [a]) -> [Int]
 getListOfIndexes (columns,listOfColumns) = if null columns
