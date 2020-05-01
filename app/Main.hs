@@ -30,12 +30,12 @@ mainWithoutJoin line = do
 
 makeInnerJoin :: (String, [String], [String], String) -> [String]
 makeInnerJoin (line, fileLines1, fileLines2, sep) = if length fileLines1 > length fileLines2
-                                                    then mergeList (fileLines2,fileLines1)
-                                                    else mergeList (fileLines1,fileLines2)
+                                                    then mergeList (fileLines2,fileLines1,sep)
+                                                    else mergeList (fileLines1,fileLines2,sep)
                                                     
-mergeList :: ([String],[String]) -> [String]
-mergeList ([],lines2) = []
-mergeList (lines1,lines2) = (head lines1 ++ head lines2): mergeList (tail lines1,tail lines2) 
+mergeList :: ([String],[String],String) -> [String]
+mergeList ([],lines2,sep) = []
+mergeList (lines1,lines2,sep) = (head lines1 ++ sep ++ head lines2): mergeList (tail lines1,tail lines2) 
 
 containsInnerJoin :: String -> Bool
 containsInnerJoin = isSubsequenceOf "INNER"
