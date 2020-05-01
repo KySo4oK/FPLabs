@@ -209,9 +209,9 @@ getListOfIndexes :: Eq a => ([a], [a]) -> [Int]
 getListOfIndexes (columns,listOfColumns) = if null columns
                                            then []
                                            else findIndexOfListElem (head columns,listOfColumns):
-                                           getListOfIndexes (tail columns, listOfColumns)
+                                           getListOfIndexes (tail columns, listOfColumns) 
 
-findIndexOfListElem :: Eq a => (a, [a]) -> Int
+findIndexOfListElem :: Eq a => (a, [a]) -> Int 
 findIndexOfListElem (column,listOfColumns) =  auxFindIndexOfListElem(column,listOfColumns,0)
 
 auxFindIndexOfListElem :: Eq a => (a, [a], Int) -> Int
