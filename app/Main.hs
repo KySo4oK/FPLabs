@@ -7,7 +7,7 @@ import Debug.Trace
 main :: IO b
 main = do
     line <- getLine
-    if containsInnerJoin line
+    if containsJoin line
     then mainWithInnerJoin line
     else mainWithoutJoin line
     main
@@ -46,7 +46,10 @@ makeInnerJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
 
 
 changeCommandLikeWithoutJoin :: String -> String
-changeCommandLikeWithoutJoin command = unwords (takeWhile (/="INNER") (words command))
+changeCommandLikeWithoutJoin command = unwords (takeWhile isNotJoin (words command))
+
+isNotJoin :: String -> Bool
+isNotJoin line = not (isSubsequenceOf "INNER" line || isSubsequenceOf "FULL" line)
 
 joinMap :: ([String], Int, Int, String, String) -> [String]
 joinMap (fileLines,firstIndex,secondIndex,sep,line) =
@@ -80,6 +83,9 @@ getColumnForJoinColumn columns func = tail (dropWhile (/='.') (func columns))
 
 containsInnerJoin :: String -> Bool
 containsInnerJoin = isSubsequenceOf "INNER"
+
+containsJoin :: String -> Bool
+containsInnerJoin = isSubsequenceOf "JOIN"
 
 parseCommandForJoinFile :: String -> String
 parseCommandForJoinFile command = head (tail (dropWhile (/="JOIN") (words command)))
