@@ -154,7 +154,9 @@ checkForAggregateFunc (line, fileLines, sep)
           | otherwise = getContentWithOrder (line, fileLines, sep)
 
 replaceHaving :: String -> String
-replaceHaving line = (takeWhile (/="HAVING") (words line)) : "WHERE" : (tail dropWhile (/="HAVING") (words line))
+replaceHaving line = unwords (takeWhile (/="HAVING") (words line)
+                             ++ ("WHERE" :
+                             tail (dropWhile (/="HAVING") (words line))))
 
 replaceCountWithParam :: (String, [String], String) -> [String]
 replaceCountWithParam (line, fileLines, sep) = getContent (replaceHaving line,iterateGroupFunc
@@ -164,17 +166,17 @@ iterateGroupFunc :: (String, [String], String) -> [String]
 iterateGroupFunc (line, fileLines, sep) = let columns = getColumnsFromCommand line
                                               gColumn = getColumnForGroupBy line
                                               gColumnIndex = findIndexOfListElem(gColumn, columns)
-                                              index findIndexOfListElem (gColumn,columns)
-                                          in (intercalate sep columns) : getCountedGroup (gColumnIndex,tail fileLines, sep)
+                                              index = findIndexOfListElem (gColumn,columns)
+                                          in intercalate sep columns : getCountedGroup (gColumnIndex,tail fileLines, sep)
 
 getCountedGroup :: (Int, [String], String) -> [String]
 getCountedGroup (index, [], sep) = []
-getCountedGroup (index, fileLines, sep) =  let length = (splitOn sep (head fileLines))
+getCountedGroup (index, fileLines, sep) =  let l = length (splitOn sep (head fileLines))
                                                mappedGB = (map (\line -> getElementByIndex (splitOn sep line) index) fileLines)
                                                gEl =  (getElementByIndex (splitOn sep (head fileLines)) index)
                                                count = (getCount (gEl,mappedGB))
-                                           in (intercalate sep ((replicate index (show count)) ++ gEl
-                                              ++ (replicate (length - index - 1) (show count)))) :
+                                           in (intercalate sep ((replicate index (show count)) ++ [gEl]
+                                              ++ (replicate (l - index - 1) (show count)))) :
                                               getCountedGroup (index, drop count fileLines,sep)
 
 getCount :: (String, [String]) -> Int
