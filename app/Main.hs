@@ -149,9 +149,46 @@ getContentWithOrder (line, fileLines, sep) = if isSubsequenceOf "ORDER" line
 
 checkForAggregateFunc :: (String, [String], String) -> [String]
 checkForAggregateFunc (line, fileLines, sep)
-          | containsCount line = replaceAggFuncWithParam (line, fileLines, sep)
+          | containsCount line = replaceCountWithParam (line, fileLines, sep)
           | containsAggFunc line = replaceAggFuncWithParam (line, fileLines, sep)
           | otherwise = getContentWithOrder (line, fileLines, sep)
+
+replaceHaving :: String -> String
+replaceHaving line = (takeWhile (/="HAVING") (words line)) : "WHERE" : (tail dropWhile (/="HAVING") (words line))
+
+replaceCountWithParam :: (String, [String], String) -> [String]
+replaceCountWithParam (line, fileLines, sep) = getContent (replaceHaving line,iterateGroupFunc
+                                               (line,getContent(removeHavingAndCount line,fileLines,sep),sep),sep)
+
+iterateGroupFunc :: (String, [String], String) -> [String]
+iterateGroupFunc (line, fileLines, sep) = let columns = getColumnsFromCommand line
+                                              gColumn = getColumnForGroupBy line
+                                              gColumnIndex = findIndexOfListElem(gColumn, columns)
+                                              index findIndexOfListElem (gColumn,columns)
+                                          in (intercalate sep columns) : getCountedGroup (gColumnIndex,tail fileLines, sep)
+
+getCountedGroup :: (Int, [String], String) -> [String]
+getCountedGroup (index, [], sep) = []
+getCountedGroup (index, fileLines, sep) =  let length = (splitOn sep (head fileLines))
+                                               mappedGB = (map (\line -> getElementByIndex (splitOn sep line) index) fileLines)
+                                               gEl =  (getElementByIndex (splitOn sep (head fileLines)) index)
+                                               count = (getCount (gEl,mappedGB))
+                                           in (intercalate sep ((replicate index (show count)) ++ gEl
+                                              ++ (replicate (length - index - 1) (show count)))) :
+                                              getCountedGroup (index, drop count fileLines,sep)
+
+getCount :: (String, [String]) -> Int
+getCount (line,lines) = if line /= head lines
+                        then 0
+                        else 1 + getCount(line, tail lines)
+
+getColumnForGroupBy :: String -> String
+getColumnForGroupBy line = head (tail (dropWhile (/="BY") (words line)))
+
+removeHavingAndCount :: String -> String
+removeHavingAndCount line = unwords (map (\w -> if isSubsequenceOf "COUNT" w
+                                                then init (drop 6 w)
+                                                else w ) (takeWhile (/="HAVING") (words line)))
 
 containsCount :: String -> Bool
 containsCount = isSubsequenceOf "COUNT"
