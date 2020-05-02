@@ -149,8 +149,12 @@ getContentWithOrder (line, fileLines, sep) = if isSubsequenceOf "ORDER" line
 
 checkForAggregateFunc :: (String, [String], String) -> [String]
 checkForAggregateFunc (line, fileLines, sep)
+          | containsCount line = replaceAggFuncWithParam (line, fileLines, sep)
           | containsAggFunc line = replaceAggFuncWithParam (line, fileLines, sep)
           | otherwise = getContentWithOrder (line, fileLines, sep)
+
+containsCount :: String -> Bool
+containsCount = isSubsequenceOf "COUNT"
 
 replaceAggFuncWithParam :: (String, [String], String) -> [String]
 replaceAggFuncWithParam (line, fileLines, sep) = iterateFunc(
