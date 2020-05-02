@@ -232,8 +232,14 @@ getContentWithoutWhere :: (String, [String], String) -> [String]
 getContentWithoutWhere (line, fileLines, sep)
          | isSubsequenceOf "load" line = fileLines
          | isSubsequenceOf "DISTINCT" line = nub (parseForSelectColumns(line,fileLines,sep))
-         | isSubsequenceOf "GROUP" line = nub (parseForSelectColumns(removeGroupBy line,fileLines,sep))
+         | isSubsequenceOf "GROUP" line = if isSubsequenceOf "ORDER" line
+                                          then nub (parseForSelectColumns(removeGroupBy line,fileLines,sep))
+                                          else nub (parseForSelectColumns(replaceGroupBy line,fileLines,sep))
          | otherwise = parseForSelectColumns(line,fileLines,sep)
+
+replaceGroupBy :: String -> String
+replaceGroupBy line = unwords (takeWhile (/="GROUP") (words line) ++
+                                           ["ORDER"] ++ init (dropWhile (/="GROUP") (words line)))
 
 removeGroupBy :: String -> String
 removeGroupBy line = unwords (takeWhile (/="GROUP") (words line) ++ dropWhile (/="ORDER") (words line))
