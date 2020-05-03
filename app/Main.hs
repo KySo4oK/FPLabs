@@ -189,7 +189,7 @@ getColumnForGroupBy line = head (tail (dropWhile (/="BY") (words line)))
 
 removeHavingAndCount :: String -> String
 removeHavingAndCount line = unwords (map (\w -> if isSubsequenceOf "COUNT" w
-                                                then init (drop 6 w)
+                                                then init (drop 6 (delete ',' w))
                                                 else w ) (takeWhile (/="HAVING") (words line)))
 
 containsCount :: String -> Bool
