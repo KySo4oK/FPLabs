@@ -167,22 +167,23 @@ iterateGroupFunc (line, fileLines, sep) = let columns = getColumnsFromCommand li
                                               gColumn = getColumnForGroupBy line
                                               gColumnIndex = findIndexOfListElem(gColumn, columns)
                                               index = findIndexOfListElem (gColumn,columns)
-                                          in intercalate sep columns : getCountedGroup (gColumnIndex,tail fileLines, sep)
+                                          in intercalate sep columns : getCountedGroup (gColumnIndex,
+                                          length (splitOn sep (head fileLines)),
+                                           map (\line -> getElementByIndex (splitOn sep line) index) (tail fileLines)
+                                          , sep)
 
-getCountedGroup :: (Int, [String], String) -> [String]
-getCountedGroup (index, [], sep) = []
-getCountedGroup (index, fileLines, sep) =  let l = length (splitOn sep (head fileLines))
-                                               mappedGB = (map (\line -> getElementByIndex (splitOn sep line) index) fileLines)
-                                               gEl =  (getElementByIndex (splitOn sep (head fileLines)) index)
-                                               count = (getCount (gEl,mappedGB))
-                                           in (intercalate sep ((replicate index (show count)) ++ [gEl]
-                                              ++ (replicate (l - index - 1) (show count)))) :
-                                              getCountedGroup (index, drop count fileLines,sep)
+getCountedGroup :: (Int, Int, [String], String) -> [String]
+getCountedGroup (index, l, [], sep) = []
+getCountedGroup (index, l, mappedGB, sep) =  let gEl =  head mappedGB
+                                                 count = getCount (gEl,mappedGB)
+                                             in intercalate sep (replicate index (show count) ++ [gEl]
+                                                ++ replicate (l - index - 1) (show count)) :
+                                                getCountedGroup (index, l, drop count mappedGB,sep)
 
 getCount :: (String, [String]) -> Int
 getCount (line,lines) = if line /= head lines
-                        then 0
-                        else 1 + getCount(line, tail lines)
+                        then 1
+                        else 2 + getCount(line, tail lines)
 
 getColumnForGroupBy :: String -> String
 getColumnForGroupBy line = head (tail (dropWhile (/="BY") (words line)))
