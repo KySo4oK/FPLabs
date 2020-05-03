@@ -149,9 +149,20 @@ getContentWithOrder (line, fileLines, sep) = if isSubsequenceOf "ORDER" line
 
 checkForAggregateFunc :: (String, [String], String) -> [String]
 checkForAggregateFunc (line, fileLines, sep)
+          | containsCase line = evaluateCases (line, fileLines, sep)
           | containsCount line = replaceCountWithParam (line, fileLines, sep)
           | containsAggFunc line = replaceAggFuncWithParam (line, fileLines, sep)
           | otherwise = getContentWithOrder (line, fileLines, sep)
+
+containsCase :: String -> Bool
+containsCase = isSubsequenceOf "CASE"
+
+evaluateCases :: (String, [String], String) -> [String]
+evaluateCases (line, fileLines, sep) = let lineWithoutCase = removeCaseExp line
+                                       in checkForAggregateFunc (lineWithoutCase,fileLines,sep) 
+
+removeCaseExp :: String -> String
+removeCaseExp line = unwords (takeWhile (/="CASE") (words line) ++ dropWhile (/="FROM") (words line))
 
 replaceHaving :: String -> String
 replaceHaving line = unwords (takeWhile (/="HAVING") (words line)
