@@ -161,26 +161,26 @@ evaluateCases :: (String, [String], String) -> [String]
 evaluateCases (line, fileLines, sep) = let lineWithoutCase = removeCaseExp line
                                            simpleLines = checkForAggregateFunc (lineWithoutCase,fileLines,sep)
                                            caseExp = takeCaseExp line
-                                       in (head simpleLines ++ sep ++ takeColumnName line) :
+                                       in (head simpleLines ++ sep ++ takeColumnNameOfCaseResult line) :
                                        map (\l -> mapWithCase
                                        (takeAllCasesInPairs caseExp)
                                        (takeElseCase caseExp)
                                         sep (splitOn sep (head simpleLines)) (l ++ sep)) (tail simpleLines)
 
-mapWithCase :: [(String, String)] -> String -> Sting -> [String] -> String -> String
+mapWithCase :: [(String, String)] -> String -> String -> [String] -> String -> String
 mapWithCase [] elseExp sep headOfFile line = line ++ elseExp
-mapWithCase pairs elseExp sep headOfFile line = if evaluateSimple headOfFile fst (head pairs) (splitOn sep line)
+mapWithCase pairs elseExp sep headOfFile line = if evaluateSimple headOfFile (fst (head pairs)) (splitOn sep line)
                                                 then line ++ snd (head pairs)
                                                 else mapWithCase (tail pairs) elseExp sep headOfFile line
 
-takeColumnName :: String -> String
-takeColumnName line = let cond = fst (takeAllCasesInPairs (takeCaseExp line))
-                      in if isSubsequenceOf "=" cond
-                         then head (splitOn "=" cond)
-                         else head (splitOn ">" cond)
+--takeColumnName :: String -> String
+--takeColumnName line = let cond = fst (head takeAllCasesInPairs (takeCaseExp line))
+--                      in if isSubsequenceOf "=" cond
+--                         then head (splitOn "=" cond)
+--                         else head (splitOn ">" cond)
 
-takeColumnName :: String -> String
-takeColumnName line = last (takeCaseExp line)
+takeColumnNameOfCaseResult :: String -> String
+takeColumnNameOfCaseResult line = last (takeCaseExp line)
 
 takeCaseExp :: String -> [String]
 takeCaseExp line = takeWhile (/="FROM") (dropWhile (/="CASE") (words line))
