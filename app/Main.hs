@@ -159,7 +159,45 @@ containsCase = isSubsequenceOf "CASE"
 
 evaluateCases :: (String, [String], String) -> [String]
 evaluateCases (line, fileLines, sep) = let lineWithoutCase = removeCaseExp line
-                                       in checkForAggregateFunc (lineWithoutCase,fileLines,sep) 
+                                           simpleLines = checkForAggregateFunc (lineWithoutCase,fileLines,sep)
+                                           caseExp = takeCaseExp line
+                                       in (head simpleLines ++ sep ++ takeColumnName line) :
+                                       map (\l -> mapWithCase
+                                       (takeAllCasesInPairs caseExp)
+                                       (takeElseCase caseExp)
+                                        sep (splitOn sep (head simpleLines)) (l ++ sep)) (tail simpleLines)
+
+mapWithCase :: [(String, String)] -> String -> Sting -> [String] -> String -> String
+mapWithCase [] elseExp sep headOfFile line = line ++ elseExp
+mapWithCase pairs elseExp sep headOfFile line = if evaluateSimple headOfFile fst (head pairs) (splitOn sep line)
+                                                then line ++ snd (head pairs)
+                                                else mapWithCase (tail pairs) elseExp sep headOfFile line
+
+takeColumnName :: String -> String
+takeColumnName line = let cond = fst (takeAllCasesInPairs (takeCaseExp line))
+                      in if isSubsequenceOf "=" cond
+                         then head (splitOn "=" cond)
+                         else head (splitOn ">" cond)
+
+takeColumnName :: String -> String
+takeColumnName line = last (takeCaseExp line)
+
+takeCaseExp :: String -> [String]
+takeCaseExp line = takeWhile (/="FROM") (dropWhile (/="CASE") (words line))
+
+takeAllCasesInPairs :: [String] -> [(String, String)]
+takeAllCasesInPairs caseExp = let cases = takeWhile (/="ELSE") (drop 1 caseExp)
+                              in auxTakeAllCasesInPairs cases
+
+auxTakeAllCasesInPairs :: [String] -> [(String, String)]
+auxTakeAllCasesInPairs [] = []
+auxTakeAllCasesInPairs cases = takePair (take 4 cases) :  auxTakeAllCasesInPairs (drop 4 cases)
+
+takePair :: [String] -> (String, String)
+takePair oneCase = (getElementByIndex oneCase 1, getElementByIndex oneCase 3)
+
+takeElseCase :: [String] -> String
+takeElseCase caseExp = head (tail (dropWhile (/="ELSE") caseExp))
 
 removeCaseExp :: String -> String
 removeCaseExp line = unwords (takeWhile (/="CASE") (words line) ++ dropWhile (/="FROM") (words line))
