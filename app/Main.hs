@@ -47,7 +47,7 @@ makeRightJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
 actualRightJoin :: ([String], [String], [String], String) -> [String]
 actualRightJoin (fileLines1, fileLines2, inner, sep) =
             inner ++
-            getFullRight (fileLines2,length (splitOn sep (head fileLines1)),inner,sep)
+            getFullRight (tail fileLines2,length (splitOn sep (head fileLines1)),inner,sep)
 
 makeFullJoin :: (String, [String], [String], String) -> [String]
 makeFullJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
@@ -58,8 +58,8 @@ makeFullJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
 actualFullJoin :: ([String], [String], [String], String) -> [String]
 actualFullJoin (fileLines1, fileLines2, inner, sep) =
             inner ++
-            getFullLeft (fileLines1,length (splitOn sep (head fileLines2)),inner,sep)  ++
-            getFullRight (fileLines2,length (splitOn sep (head fileLines1)),inner,sep)
+            getFullLeft (tail fileLines1,length (splitOn sep (head fileLines2)),inner,sep)  ++
+            getFullRight (tail fileLines2,length (splitOn sep (head fileLines1)),inner,sep)
 
 getFullLeft :: ([String], Int, [String], String) -> [String]
 getFullLeft (left,lr,inner,sep) = let leftPart = map (take (length (head left))) inner in
@@ -70,8 +70,8 @@ notInPart [] line = True
 notInPart parts line = head parts /= line && notInPart (tail parts) line
 
 getFullRight :: ([String], Int, [String], String) -> [String]
-getFullRight (right,ll,inner,sep) = let rightPart = map (drop (length  (head right))) inner in
-            map (intercalate sep (replicate ll "null") ++) (filter (notInPart rightPart) right)
+getFullRight (right,ll,inner,sep) = let rightPart = map (\line -> intercalate sep (drop ll (splitOn sep line))) inner in
+            map (\line -> intercalate sep (replicate ll "null") ++ sep ++ line) (filter (notInPart rightPart) right)
 
 actualInnerJoin :: (String, [String], [String], String) -> [String]
 actualInnerJoin (line, fileLines1, fileLines2, sep) =
