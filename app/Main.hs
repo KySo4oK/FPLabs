@@ -47,7 +47,7 @@ makeRightJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
 actualRightJoin :: ([String], [String], [String], String) -> [String]
 actualRightJoin (fileLines1, fileLines2, inner, sep) =
             inner ++
-            getFullRight (fileLines2,length (splitOn sep (head fileLines1)),inner,sep)
+            getFullRight (tail fileLines2,length (splitOn sep (head fileLines1)),inner,sep)
 
 makeFullJoin :: (String, [String], [String], String) -> [String]
 makeFullJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
@@ -58,8 +58,8 @@ makeFullJoin (line, fileLines1, fileLines2, sep) = checkForAggregateFunc (
 actualFullJoin :: ([String], [String], [String], String) -> [String]
 actualFullJoin (fileLines1, fileLines2, inner, sep) =
             inner ++
-            getFullLeft (fileLines1,length (splitOn sep (head fileLines2)),inner,sep)  ++
-            getFullRight (fileLines2,length (splitOn sep (head fileLines1)),inner,sep)
+            getFullLeft (tail fileLines1,length (splitOn sep (head fileLines2)),inner,sep)  ++
+            getFullRight (tail fileLines2,length (splitOn sep (head fileLines1)),inner,sep)
 
 getFullLeft :: ([String], Int, [String], String) -> [String]
 getFullLeft (left,lr,inner,sep) = let leftPart = map (take (length (head left))) inner in
