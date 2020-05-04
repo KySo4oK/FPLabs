@@ -70,8 +70,8 @@ notInPart [] line = True
 notInPart parts line = head parts /= line && notInPart (tail parts) line
 
 getFullRight :: ([String], Int, [String], String) -> [String]
-getFullRight (right,ll,inner,sep) = let rightPart = map (drop (length  (head right))) inner in
-            map (intercalate sep (replicate ll "null") ++) (filter (notInPart rightPart) right)
+getFullRight (right,ll,inner,sep) = let rightPart = map (\line -> intercalate sep (drop ll (splitOn sep line))) inner in
+            map (\line -> intercalate sep (replicate ll "null") ++ sep ++ line) (filter (notInPart rightPart) right)
 
 actualInnerJoin :: (String, [String], [String], String) -> [String]
 actualInnerJoin (line, fileLines1, fileLines2, sep) =
